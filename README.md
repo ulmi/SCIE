@@ -12,8 +12,8 @@ The idea is to have a database (postgresql) to manage all the fire extinguisher 
 * extinguisher type;
 * automatic expiration date, based on type;
 * automatic recharge date, based on last type;
-* and so on
-* ahhh ad cool simple interface for the average Joe to use
+* and so on...
+* ahhh a cool & simple interface for the average Joe to use
 
 ## Content ##
 
