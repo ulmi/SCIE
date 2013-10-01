@@ -1,0 +1,23 @@
+CREATE OR REPLACE FUNCTION validity_date()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set validity_date = inspection_date + interval '1 year';
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.inspection_date IS DISTINCT FROM old.inspection_date THEN
+			update extinguisher set validity_date = inspection_date + interval '1 year';
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION validity_date() OWNER TO postgres;
+ 
+CREATE TRIGGER validity_date
+  AFTER INSERT OR UPDATE OF inspection_date ON "extinguisher"
+  FOR EACH ROW
+  EXECUTE PROCEDURE validity_date();

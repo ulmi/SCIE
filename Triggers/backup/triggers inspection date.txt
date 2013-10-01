@@ -1,0 +1,23 @@
+CREATE OR REPLACE FUNCTION inpection_date()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set inspection_date = (SELECT MAX(inspection_date) FROM record where extinguisher_code_extinguisher = extinguisher_code);
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.inspection_date IS DISTINCT FROM old.inspection_date THEN
+			update extinguisher set inspection_date = (SELECT MAX(inspection_date) FROM record where extinguisher_code_extinguisher = extinguisher_code);
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION ext_life_span() OWNER TO postgres;
+ 
+CREATE TRIGGER inpection_date
+  AFTER INSERT OR UPDATE OF inspection_date ON "record"
+  FOR EACH ROW
+  EXECUTE PROCEDURE inpection_date();

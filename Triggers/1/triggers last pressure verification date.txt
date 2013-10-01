@@ -1,0 +1,23 @@
+CREATE OR REPLACE FUNCTION last_pressure_verification_date()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set last_pressure_verification_date = (SELECT MAX(inspection_date) FROM record where extinguisher_code_extinguisher = extinguisher_code);
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.last_pressure_verification_date IS DISTINCT FROM old.pressure_verification_date THEN
+			update extinguisher set last_pressure_verification_date = (SELECT MAX(inspection_date) FROM record where extinguisher_code_extinguisher = extinguisher_code);
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION last_pressure_verification_date() OWNER TO postgres;
+ 
+CREATE TRIGGER last_pressure_verification_date
+  AFTER INSERT OR UPDATE OF hydraulic_test ON "record"
+  FOR EACH ROW
+  EXECUTE PROCEDURE last_pressure_verification_date();

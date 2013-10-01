@@ -1,0 +1,15 @@
+INSERT INTO extinguisher (extinguisher_code, extinguisher_num, type_designation_extinguisher_type, brand_designation_brand, capacity_designation_capacity, company_designation_company, local_designation_local, conservation_designation_conservation, manufacturing_date)
+VALUES (1312465, 30, 'CO2', 'Fire Ice', '5kg', 'Siprex Extintores', 'Câmara Municipal', 'Bom', 2006);
+
+INSERT INTO extinguisher (extinguisher_code, extinguisher_num, type_designation_extinguisher_type, brand_designation_brand, capacity_designation_capacity, company_designation_company, local_designation_local, conservation_designation_conservation, manufacturing_date)
+VALUES (6011, 2, 'Pó químico', 'Glória', '6kg', 'Siprex Extintores', 'Câmara Municipal', 'Bom', 2006);
+
+INSERT INTO extinguisher (extinguisher_code, extinguisher_num, type_designation_extinguisher_type, brand_designation_brand, capacity_designation_capacity, company_designation_company, local_designation_local, conservation_designation_conservation, manufacturing_date)
+VALUES (3225, 3, 'Pó químico', 'Glória', '6kg', 'Siprex Extintores', 'Câmara Municipal', 'Bom', 2006);
+
+
+
+
+
+
+INSERT INTO record (extinguisher_code_extinguisher, inspection_date) VALUES (1312465, '9/11/2012')

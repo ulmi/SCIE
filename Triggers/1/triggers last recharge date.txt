@@ -1,0 +1,23 @@
+CREATE OR REPLACE FUNCTION last_recharge_date()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set last_recharge_date = (SELECT MAX(inspection_date) FROM record where extinguisher_code_extinguisher = extinguisher_code);
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.last_recharge_date IS DISTINCT FROM old.last_recharge_date THEN
+			update extinguisher set last_recharge_date = (SELECT MAX(inspection_date) FROM record where extinguisher_code_extinguisher = extinguisher_code);
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION last_recharge_date() OWNER TO postgres;
+ 
+CREATE TRIGGER last_recharge_date
+  AFTER INSERT OR UPDATE OF recharge ON "record"
+  FOR EACH ROW
+  EXECUTE PROCEDURE last_recharge_date();

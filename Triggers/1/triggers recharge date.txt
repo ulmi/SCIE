@@ -1,0 +1,25 @@
+CREATE OR REPLACE FUNCTION recharge_date()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set recharge_date = last_recharge_date + interval '1 year' * 
+			(SELECT recharge FROM extinguisher_type where type_designation = type_designation_extinguisher_type);
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.recharge_date IS DISTINCT FROM old.recharge_date THEN
+			update extinguisher set recharge_date = last_recharge_date + interval '1 year' *
+			(SELECT recharge FROM extinguisher_type where type_designation = type_designation_extinguisher_type);
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION recharge_date() OWNER TO postgres;
+ 
+CREATE TRIGGER validity_date
+  AFTER INSERT OR UPDATE OF last_recharge_date ON "extinguisher"
+  FOR EACH ROW
+  EXECUTE PROCEDURE recharge_date();

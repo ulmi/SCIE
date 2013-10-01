@@ -1,0 +1,61 @@
+CREATE OR REPLACE FUNCTION ext_life_span()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set life_date = manufacturing_date + interval '1 year' * 
+			(SELECT lifespan FROM extinguisher_type, extinguisher where type_designation = type_designation_extinguisher_type);
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.manufacturing_date IS DISTINCT FROM old.manufacturing_date THEN
+			update extinguisher set life_date = manufacturing_date + interval '1 year' * 
+			(SELECT lifespan FROM extinguisher_type, extinguisher where type_designation = type_designation_extinguisher_type);
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+          
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION ext_life_span() OWNER TO postgres;
+ 
+CREATE TRIGGER insert_lifespan
+  AFTER INSERT OR UPDATE OF manufacturing_date
+  ON "extinguisher"
+  FOR EACH ROW
+  EXECUTE PROCEDURE ext_life_span();
+
+
+
+
+
+
+
+
+
+
+
+
+
+DECLARE
+	new_date timestamptz;
+	manu_date char(10);
+	intervalo char(10);
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			intervalo := to_char((SELECT lifespan FROM extinguisher_type, extinguisher where type_designation = type_designation_extinguisher_type), '99999');
+			manu_date := to_char(New.manufacturing_date, 'YYYY-MM-DD');
+			new_date := (date 'manu_date' + integer 'intervalo' );
+			update extinguisher set life_date = new_date;
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.manufacturing_date IS DISTINCT FROM old.manufacturing_date THEN
+			intervalo := to_char((SELECT lifespan FROM extinguisher_type, extinguisher where type_designation = type_designation_extinguisher_type), '99999');
+			manu_date := to_char(New.manufacturing_date, 'YYYY-MM-DD');
+			new_date := (date 'manu_date' + integer 'intervalo' );
+			update extinguisher set life_date = new_date;
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;

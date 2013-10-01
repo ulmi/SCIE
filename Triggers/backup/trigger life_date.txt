@@ -1,0 +1,107 @@
+-- Function: ext_life_span()
+
+-- DROP FUNCTION ext_life_span();
+
+CREATE OR REPLACE FUNCTION ext_life_span()
+  RETURNS trigger AS
+$BODY$BEGIN
+	IF (TG_OP = 'INSERT') THEN
+		NEW.life_date = life_date(NEW.manufacturing_date +
+		(select lifespan from extinguisher_type
+		where type_designation=extinguisher.type_designation));
+
+	ELSIF (TG_OP = 'UPDATE') THEN
+		IF NOT (NEW.manufacturing_date ~= OLD.manufacturing_date) 
+			THEN NEW.life_date = life_date(NEW.manufacturing_date + 
+			(select lifespan from extinguisher_type 
+			where type_designation=extinguisher.type_designation));
+		END IF;
+	END IF;
+
+RETURN NEW;
+END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION ext_life_span()
+  OWNER TO postgres;
+
+
+INSERT INTO extinguisher (extinguisher_id, extinguisher_code, local_designation, extinguisher_num, type_designation, capacity_designation, brand_designation, company_designation, conservation_designation, manufacturing_date)
+VALUES (1, 1234, 'Câmara Municipal', 30, 'CO2', '6lts', 'Glória', 'Siprex Extintores', 'Bom', 2000);
+
+INSERT
+CREATE OR REPLACE FUNCTION ext_life_span_insert()
+  RETURNS trigger AS
+$BODY$
+BEGIN
+	update extinguisher set life_date = manufacturing_date + 
+	(SELECT lifespan FROM extinguisher_type 
+	where type_designation = type_designation_extinguisher_type);
+	RETURN NULL;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION ext_life_span_insert() OWNER TO postgres;
+ 
+CREATE TRIGGER insert_lifespan_insert
+  AFTER INSERT ON "extinguisher"
+  FOR EACH ROW
+  EXECUTE PROCEDURE ext_life_span_update();
+
+
+
+
+UPDATE
+CREATE OR REPLACE FUNCTION ext_life_span_update()
+  RETURNS trigger AS
+$BODY$
+BEGIN
+	update extinguisher set life_date = manufacturing_date + 
+	(SELECT lifespan FROM extinguisher_type 
+	where type_designation = type_designation_extinguisher_type);
+	RETURN NULL;
+END;
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION ext_life_span_update() OWNER TO postgres;
+ 
+CREATE TRIGGER insert_lifespan_update
+  AFTER UPDATE OF manufacturing_date ON "extinguisher"
+  FOR EACH ROW
+  WHEN (new.manufacturing_date IS DISTINCT FROM old.manufacturing_date)
+  EXECUTE PROCEDURE ext_life_span_update();
+
+
+
+CREATE OR REPLACE FUNCTION ext_life_span()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set life_date = manufacturing_date + 
+			(SELECT lifespan FROM extinguisher_type 
+			where type_designation = type_designation_extinguisher_type);
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.manufacturing_date IS DISTINCT FROM old.manufacturing_date THEN
+			update extinguisher set life_date = manufacturing_date + 
+			(SELECT lifespan FROM extinguisher_type 
+			where type_designation = type_designation_extinguisher_type);
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION ext_life_span() OWNER TO postgres;
+ 
+CREATE TRIGGER insert_lifespan
+  AFTER INSERT OR UPDATE OF manufacturing_date
+  ON "extinguisher"
+  FOR EACH ROW
+  EXECUTE PROCEDURE ext_life_span();

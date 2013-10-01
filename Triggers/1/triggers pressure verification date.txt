@@ -1,0 +1,25 @@
+CREATE OR REPLACE FUNCTION pressure_verification_date()
+  RETURNS trigger AS
+$BODY$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+			update extinguisher set pressure_verification_date = last_pressure_verification_date + interval '1 year' * 
+			(SELECT pressure FROM extinguisher_type where type_designation = type_designation_extinguisher_type);
+			RETURN NULL;
+                ELSIF (TG_OP = 'UPDATE') THEN
+			IF new.pressure_verification_date IS DISTINCT FROM old.pressure_verification_date THEN
+			update extinguisher set pressure_verification_date = last_pressure_verification_date + interval '1 year' *
+			(SELECT pressure FROM extinguisher_type where type_designation = type_designation_extinguisher_type);
+			END IF;
+			RETURN NULL;
+                END IF;
+            END;
+            $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION pressure_verification_date() OWNER TO postgres;
+ 
+CREATE TRIGGER pressure_verication_date()
+  AFTER INSERT OR UPDATE OF last_pressure_verification_date ON "extinguisher"
+  FOR EACH ROW
+  EXECUTE PROCEDURE pressure_verification_date();
